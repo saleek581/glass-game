@@ -22,8 +22,8 @@ let breakSound;
 let broken = false;
 
 function preload() {
-    this.load.image("black", "assets/black.jpg.jpg");
-    this.load.image("glass", "assets/glass1.png");
+    this.load.image("black", "assets/black.jpg");
+    this.load.image("glass", "assets/glass1.PNG");
     this.load.audio("break", "assets/break.mp3");
 }
 
