@@ -29,49 +29,49 @@ function preload() {
 
 function create() {
 
-    const screenWidth = this.scale.width;
-    const screenHeight = this.scale.height;
+    const w = this.scale.width;
+    const h = this.scale.height;
 
-    // Background
-    blackBg = this.add.image(
-        screenWidth / 2,
-        screenHeight / 2,
-        "black"
-    );
+    // background
+    blackBg = this.add.image(w / 2, h / 2, "black");
+    blackBg.setDisplaySize(w, h);
 
-    fitImageToHeight(blackBg, screenHeight);
-
-    // Glass
-    glass = this.add.image(
-        screenWidth / 2,
-        screenHeight / 2,
-        "glass"
-    );
-
-    fitImageToHeight(glass, screenHeight);
+    // glass
+    glass = this.add.image(w / 2, h / 2, "glass");
+    glass.setDisplaySize(w, h);
     glass.setVisible(false);
 
-    // Sound
+    // sound
     breakSound = this.sound.add("break");
 
-    // 🔥 IMPORTANT: unlock audio on first touch
+    // unlock audio (must for mobile)
     this.input.once("pointerdown", () => {
         this.sound.context.resume();
     });
 
-    // 📱 PHONE SHAKE EVENT
+    // 📱 PHONE SHAKE PERMISSION (IMPORTANT FIX FOR iPhone)
+    if (typeof DeviceMotionEvent !== "undefined" &&
+        typeof DeviceMotionEvent.requestPermission === "function") {
+
+        document.body.addEventListener("click", async () => {
+            try {
+                await DeviceMotionEvent.requestPermission();
+            } catch (e) {
+                console.log("Motion permission denied");
+            }
+        }, { once: true });
+    }
+
+    // 📱 SHAKE DETECTION
     if (window.DeviceMotionEvent) {
 
-        let lastX = 0;
-        let lastY = 0;
-        let lastZ = 0;
+        let lastX = 0, lastY = 0, lastZ = 0;
 
         window.addEventListener("devicemotion", (event) => {
 
             if (broken) return;
 
             const acc = event.accelerationIncludingGravity;
-
             if (!acc) return;
 
             const x = acc.x || 0;
@@ -87,7 +87,7 @@ function create() {
             lastY = y;
             lastZ = z;
 
-            // 🔥 sensitivity (adjust if needed)
+            // sensitivity (adjust if needed)
             if (diff > 25) {
                 breakGlass.call(this);
             }
@@ -104,21 +104,11 @@ function breakGlass() {
     // sound
     breakSound.play({ volume: 1 });
 
-    // camera shake effect
+    // camera shake
     this.cameras.main.shake(400, 0.02);
 
     // show broken glass
     glass.setVisible(true);
-}
-
-function fitImageToHeight(image, maxHeight) {
-
-    const aspectRatio = image.width / image.height;
-
-    const newHeight = maxHeight;
-    const newWidth = newHeight * aspectRatio;
-
-    image.setDisplaySize(newWidth, newHeight);
 }
 
 window.addEventListener("resize", () => {
