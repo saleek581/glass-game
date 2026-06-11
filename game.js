@@ -20,79 +20,54 @@ let blackBg;
 let glass;
 let breakSound;
 let broken = false;
+let gameReady = false;
 
 function preload() {
     this.load.image("black", "assets/black.jpg");
-    this.load.image("glass", "assets/glass1.PNG");
+    this.load.image("glass", "assets/glass1.png");
     this.load.audio("break", "assets/break.mp3");
 }
 
 function create() {
 
-    const w = this.scale.width;
-    const h = this.scale.height;
+    const screenWidth = this.scale.width;
+    const screenHeight = this.scale.height;
 
-    // background
-    blackBg = this.add.image(w / 2, h / 2, "black");
-    blackBg.setDisplaySize(w, h);
+    // Background
+    blackBg = this.add.image(
+        screenWidth / 2,
+        screenHeight / 2,
+        "black"
+    );
 
-    // glass
-    glass = this.add.image(w / 2, h / 2, "glass");
-    glass.setDisplaySize(w, h);
+    fitImageToHeight(blackBg, screenHeight);
+
+    // Broken glass image
+    glass = this.add.image(
+        screenWidth / 2,
+        screenHeight / 2,
+        "glass"
+    );
+
+    fitImageToHeight(glass, screenHeight);
     glass.setVisible(false);
 
-    // sound
+    // Sound
     breakSound = this.sound.add("break");
 
-    // unlock audio (must for mobile)
-    this.input.once("pointerdown", () => {
-        this.sound.context.resume();
+    // Prevent accidental trigger during load
+    this.time.delayedCall(1000, () => {
+        gameReady = true;
     });
 
-    // 📱 PHONE SHAKE PERMISSION (IMPORTANT FIX FOR iPhone)
-    if (typeof DeviceMotionEvent !== "undefined" &&
-        typeof DeviceMotionEvent.requestPermission === "function") {
+    // Break on click/tap
+    this.input.on("pointerup", () => {
 
-        document.body.addEventListener("click", async () => {
-            try {
-                await DeviceMotionEvent.requestPermission();
-            } catch (e) {
-                console.log("Motion permission denied");
-            }
-        }, { once: true });
-    }
+        if (!gameReady) return;
+        if (broken) return;
 
-    // 📱 SHAKE DETECTION
-    if (window.DeviceMotionEvent) {
-
-        let lastX = 0, lastY = 0, lastZ = 0;
-
-        window.addEventListener("devicemotion", (event) => {
-
-            if (broken) return;
-
-            const acc = event.accelerationIncludingGravity;
-            if (!acc) return;
-
-            const x = acc.x || 0;
-            const y = acc.y || 0;
-            const z = acc.z || 0;
-
-            const diff =
-                Math.abs(x - lastX) +
-                Math.abs(y - lastY) +
-                Math.abs(z - lastZ);
-
-            lastX = x;
-            lastY = y;
-            lastZ = z;
-
-            // sensitivity (adjust if needed)
-            if (diff > 25) {
-                breakGlass.call(this);
-            }
-        });
-    }
+        breakGlass.call(this);
+    });
 }
 
 function breakGlass() {
@@ -101,14 +76,29 @@ function breakGlass() {
 
     broken = true;
 
-    // sound
-    breakSound.play({ volume: 1 });
+    breakSound.play({
+        volume: 1
+    });
 
-    // camera shake
-    this.cameras.main.shake(400, 0.02);
+    this.cameras.main.shake(
+        400,
+        0.02
+    );
 
-    // show broken glass
     glass.setVisible(true);
+}
+
+function fitImageToHeight(image, maxHeight) {
+
+    const aspectRatio = image.width / image.height;
+
+    const newHeight = maxHeight;
+    const newWidth = newHeight * aspectRatio;
+
+    image.setDisplaySize(
+        newWidth,
+        newHeight
+    );
 }
 
 window.addEventListener("resize", () => {
