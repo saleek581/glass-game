@@ -16,33 +16,50 @@ const config = {
 
 new Phaser.Game(config);
 
+let blackBg;
 let glass;
 let breakSound;
 let broken = false;
 
 function preload() {
+    this.load.image("black", "assets/black.jpg.jpg");
     this.load.image("glass", "assets/glass1.png");
     this.load.audio("break", "assets/break.mp3");
 }
 
 function create() {
 
-    const w = this.scale.width;
-    const h = this.scale.height;
+    const screenWidth = this.scale.width;
+    const screenHeight = this.scale.height;
 
-    // glass image
-    glass = this.add.image(w / 2, h / 2, "glass");
-    glass.setDisplaySize(w, h);
+    // Background
+    blackBg = this.add.image(
+        screenWidth / 2,
+        screenHeight / 2,
+        "black"
+    );
 
-    // sound
+    fitImageToHeight(blackBg, screenHeight);
+
+    // Glass
+    glass = this.add.image(
+        screenWidth / 2,
+        screenHeight / 2,
+        "glass"
+    );
+
+    fitImageToHeight(glass, screenHeight);
+    glass.setVisible(false);
+
+    // Sound
     breakSound = this.sound.add("break");
 
-    // 🔥 UNLOCK AUDIO (MUST for mobile)
+    // 🔥 IMPORTANT: unlock audio on first touch
     this.input.once("pointerdown", () => {
         this.sound.context.resume();
     });
 
-    // 📱 PHONE SHAKE DETECTION
+    // 📱 PHONE SHAKE EVENT
     if (window.DeviceMotionEvent) {
 
         let lastX = 0;
@@ -70,7 +87,7 @@ function create() {
             lastY = y;
             lastZ = z;
 
-            // 🔥 shake sensitivity (adjust if needed)
+            // 🔥 sensitivity (adjust if needed)
             if (diff > 25) {
                 breakGlass.call(this);
             }
@@ -87,10 +104,23 @@ function breakGlass() {
     // sound
     breakSound.play({ volume: 1 });
 
-    // visual effect
+    // camera shake effect
     this.cameras.main.shake(400, 0.02);
 
-    glass.setVisible(false);
-
-    // optional: replace with broken image if you want
+    // show broken glass
+    glass.setVisible(true);
 }
+
+function fitImageToHeight(image, maxHeight) {
+
+    const aspectRatio = image.width / image.height;
+
+    const newHeight = maxHeight;
+    const newWidth = newHeight * aspectRatio;
+
+    image.setDisplaySize(newWidth, newHeight);
+}
+
+window.addEventListener("resize", () => {
+    location.reload();
+});
