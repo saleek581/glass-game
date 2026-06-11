@@ -23,7 +23,7 @@ let broken = false;
 let gameReady = false;
 
 function preload() {
-    this.load.image("black", "assets/black.jpg");
+    this.load.image("black", "assets/black.jpg.jpg");
     this.load.image("glass", "assets/glass1.png");
     this.load.audio("break", "assets/break.mp3");
 }
